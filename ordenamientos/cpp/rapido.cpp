@@ -1,29 +1,42 @@
-// Ordenamiento rapido (quick sort): O(n log n) en promedio, O(n^2) en el peor caso.
-// Particion de Lomuto con el ultimo elemento como pivote.
+// Ordenamiento rapido (quick sort): O(n log n) en promedio, O(n^2) en el peor caso,
+// que se da con la lista ya ordenada.
+// Convencion del curso: el pivote es el mayor entre los primeros dos elementos diferentes.
+#include <algorithm>
 #include <iostream>
 #include <utility>
 #include <vector>
 using namespace std;
 
-// Deja el pivote en su posicion final y devuelve ese indice.
-int particion(vector<int>& v, int izq, int der) {
-    int pivote = v[der];
-    int i = izq - 1;  // ultimo elemento de la zona de menores
-    for (int j = izq; j < der; ++j) {
-        if (v[j] < pivote) {
-            ++i;
-            swap(v[i], v[j]);
+// Devuelve false si todos los elementos son iguales: el rango ya esta ordenado.
+bool escogerPivote(const vector<int>& v, int izq, int der, int& pivote) {
+    for (int k = izq + 1; k <= der; ++k) {
+        if (v[k] != v[izq]) {
+            pivote = max(v[izq], v[k]);
+            return true;
         }
     }
-    swap(v[i + 1], v[der]);
-    return i + 1;
+    return false;
+}
+
+// Deja los menores en v[izq..l-1] y los mayores o iguales en v[l..der]. Devuelve l.
+// El pivote no queda en su posicion final: queda en el grupo de la derecha.
+int particion(vector<int>& v, int izq, int der, int pivote) {
+    int l = izq, r = der;
+    do {
+        swap(v[l], v[r]);
+        while (v[l] < pivote) ++l;
+        while (v[r] >= pivote) --r;
+    } while (l <= r);
+    return l;
 }
 
 void quickSort(vector<int>& v, int izq, int der) {
     if (izq >= der) return;
-    int corte = particion(v, izq, der);
+    int pivote;
+    if (!escogerPivote(v, izq, der, pivote)) return;
+    int corte = particion(v, izq, der, pivote);
     quickSort(v, izq, corte - 1);
-    quickSort(v, corte + 1, der);
+    quickSort(v, corte, der);  // incluye el corte: el pivote sigue en este grupo
 }
 
 void quickSort(vector<int>& v) {
@@ -31,7 +44,7 @@ void quickSort(vector<int>& v) {
 }
 
 int main() {
-    vector<int> v = {10, 7, 8, 9, 1, 5};
+    vector<int> v = {7, 7, 5, 8, 1, 9, 6, 8};
     quickSort(v);
     for (int x : v) cout << x << ' ';
     cout << '\n';
